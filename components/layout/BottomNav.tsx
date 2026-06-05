@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, CreditCard, Heart, Moon, Settings } from 'lucide-react';
+import { Home, CreditCard, Heart, Moon, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
@@ -10,7 +10,7 @@ const NAV_ITEMS = [
   { href: '/loans',         label: 'ঋণ',      icon: CreditCard },
   { href: '/donations',     label: 'দান',     icon: Heart      },
   { href: '/islamic',       label: 'ইসলাম',   icon: Moon       },
-  { href: '/settings',      label: 'সেটিং',   icon: Settings   },
+  { href: '/reports',      label: 'রিপোর্ট',  icon: FileText   },
 ];
 
 export default function BottomNav() {
