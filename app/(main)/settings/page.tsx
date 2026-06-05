@@ -4,23 +4,32 @@ import { useAuth } from '@/hooks/useAuth';
 import Link from 'next/link';
 import {
   User, Lock, Bell, HelpCircle,
-  ChevronRight, LogOut, Shield
+  ChevronRight, LogOut, Shield,
+  PiggyBank, Wallet, FileText
 } from 'lucide-react';
 
 const MENU_ITEMS = [
   {
     group: 'অ্যাকাউন্ট',
     items: [
-      { href: '/profile',          icon: User,       label: 'প্রোফাইল দেখুন'       },
-      { href: '/settings/password',icon: Lock,       label: 'পাসওয়ার্ড পরিবর্তন'  },
-      { href: '/notifications',    icon: Bell,       label: 'নোটিফিকেশন'            },
+      { href: '/profile',           icon: User,       label: 'প্রোফাইল দেখুন'       },
+      { href: '/settings/password', icon: Lock,       label: 'পাসওয়ার্ড পরিবর্তন'  },
+      { href: '/notifications',     icon: Bell,       label: 'নোটিফিকেশন'            },
+    ],
+  },
+  {
+    group: 'আর্থিক',
+    items: [
+      { href: '/savings',  icon: PiggyBank, label: 'আমার সঞ্চয়'          },
+      { href: '/finance',  icon: Wallet,    label: 'আর্থিক সারসংক্ষেপ'   },
+      { href: '/reports',  icon: FileText,  label: 'রিপোর্ট ও এক্সপোর্ট' },
     ],
   },
   {
     group: 'অন্যান্য',
     items: [
-      { href: '/settings/privacy', icon: Shield,     label: 'গোপনীয়তা নীতি'       },
-      { href: '/settings/help',    icon: HelpCircle, label: 'সাহায্য ও যোগাযোগ'   },
+      { href: '/settings/privacy', icon: Shield,     label: 'গোপনীয়তা নীতি'     },
+      { href: '/settings/help',    icon: HelpCircle, label: 'সাহায্য ও যোগাযোগ' },
     ],
   },
 ];

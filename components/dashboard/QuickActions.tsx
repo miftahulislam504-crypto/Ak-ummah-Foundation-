@@ -1,13 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { CreditCard, Heart, User, FileText } from 'lucide-react';
+import { CreditCard, Heart, User, FileText, PiggyBank, Wallet } from 'lucide-react';
 
 const ACTIONS = [
-  { href: '/loans/apply',  label: 'ঋণ আবেদন',   icon: CreditCard, color: 'bg-blue-50   text-blue-700   border-blue-100'   },
-  { href: '/donations/new',label: 'দান করুন',    icon: Heart,      color: 'bg-red-50    text-red-700    border-red-100'    },
-  { href: '/profile',      label: 'প্রোফাইল',    icon: User,       color: 'bg-purple-50 text-purple-700 border-purple-100' },
-  { href: '/reports',      label: 'রিপোর্ট',     icon: FileText,   color: 'bg-amber-50  text-amber-700  border-amber-100'  },
+  { href: '/loans/apply',  label: 'ঋণ আবেদন',  icon: CreditCard, color: 'bg-blue-50   text-blue-700   border-blue-100'   },
+  { href: '/donations/new',label: 'দান করুন',   icon: Heart,      color: 'bg-red-50    text-red-700    border-red-100'    },
+  { href: '/savings',      label: 'সঞ্চয়',      icon: PiggyBank,  color: 'bg-green-50  text-green-700  border-green-100'  },
+  { href: '/finance',      label: 'অর্থ',        icon: Wallet,     color: 'bg-amber-50  text-amber-700  border-amber-100'  },
 ];
 
 export default function QuickActions() {
