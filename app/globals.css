@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --primary:        #166534;
+    --primary-light:  #22c55e;
+    --primary-dark:   #14532d;
+    --gold:           #f59e0b;
+    --font-bangla:    'Noto Sans Bengali', sans-serif;
+    --font-arabic:    'Amiri', serif;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: var(--font-bangla);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Bengali & Arabic font classes */
+  .font-bangla { font-family: var(--font-bangla); }
+  .font-arabic { font-family: var(--font-arabic); direction: rtl; }
+}
+
+@layer components {
+  /* Buttons */
+  .btn-primary {
+    @apply bg-primary-700 hover:bg-primary-800 text-white font-semibold
+           px-6 py-3 rounded-xl transition-all duration-200
+           active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-outline {
+    @apply border-2 border-primary-700 text-primary-700
+           hover:bg-primary-700 hover:text-white font-semibold
+           px-6 py-3 rounded-xl transition-all duration-200 active:scale-95;
+  }
+
+  .btn-gold {
+    @apply bg-gold-500 hover:bg-gold-600 text-white font-semibold
+           px-6 py-3 rounded-xl transition-all duration-200 active:scale-95;
+  }
+
+  /* Cards */
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100 p-5;
+  }
+
+  .card-green {
+    @apply bg-gradient-to-br from-primary-800 to-primary-700
+           rounded-2xl text-white p-5 shadow-lg;
+  }
+
+  /* Input */
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl border border-gray-200
+           focus:border-primary-500 focus:ring-2 focus:ring-primary-100
+           outline-none transition-all duration-200 bg-white text-gray-900
+           placeholder:text-gray-400 text-sm;
+  }
+
+  /* Badge */
+  .badge-pending  { @apply bg-yellow-100 text-yellow-700 text-xs px-2 py-1 rounded-full font-medium; }
+  .badge-active   { @apply bg-green-100  text-green-700  text-xs px-2 py-1 rounded-full font-medium; }
+  .badge-rejected { @apply bg-red-100    text-red-700    text-xs px-2 py-1 rounded-full font-medium; }
+
+  /* Section heading */
+  .section-title {
+    @apply text-2xl font-bold text-primary-900 mb-1;
+  }
+
+  .section-sub {
+    @apply text-gray-500 text-sm;
+  }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+
+  /* Scrollbar */
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+}

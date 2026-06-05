@@ -1,0 +1,103 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuth()        { return request.auth != null; }
+    function isOwner(uid)    { return request.auth.uid == uid; }
+    function getUserData()   { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function isAdmin()       { return isAuth() && getUserData().role in ['super_admin', 'admin']; }
+    function isFinance()     { return isAuth() && getUserData().role in ['super_admin', 'admin', 'finance_manager']; }
+    function isLoanManager() { return isAuth() && getUserData().role in ['super_admin', 'admin', 'loan_manager']; }
+    function isActive()      { return isAuth() && getUserData().status == 'active'; }
+
+    // ===== USERS =====
+    match /users/{userId} {
+      allow read:   if isAuth();
+      allow create: if isAuth() && isOwner(userId);
+      allow update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ===== DONATIONS =====
+    match /donations/{docId} {
+      allow read:   if isAuth();
+      allow create: if isActive();
+      allow update: if isAdmin() || isFinance();
+      allow delete: if isAdmin();
+    }
+
+    // ===== LOANS =====
+    match /loans/{docId} {
+      allow read:   if isAuth();
+      allow create: if isActive();
+      allow update: if isAdmin() || isLoanManager();
+      allow delete: if isAdmin();
+    }
+
+    // ===== SAVINGS =====
+    match /savings/{docId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || isFinance();
+    }
+
+    // ===== EXPENSES =====
+    match /expenses/{docId} {
+      allow read:  if isAuth();
+      allow write: if isAdmin() || isFinance();
+    }
+
+    // ===== NOTIFICATIONS =====
+    match /notifications/{docId} {
+      allow read:   if isAuth() && isOwner(resource.data.userId);
+      allow create: if isAdmin();
+      allow update: if isOwner(resource.data.userId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ===== NOTICES =====
+    match /notices/{docId} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ===== PUBLIC STATS =====
+    match /public_stats/{docId} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ===== REFERRALS =====
+    match /referrals/{docId} {
+      allow read:   if isAdmin();
+      allow create: if isAuth();
+    }
+
+    // ===== ACTIVITIES =====
+    match /activities/{docId} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ===== TEAM =====
+    match /team/{docId} {
+      allow read:  if true;
+      allow write: if isAdmin();
+    }
+
+    // ===== AUDIT LOGS =====
+    match /audit_logs/{docId} {
+      allow read:   if isAdmin();
+      allow create: if isAuth();
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // ===== CONTACTS =====
+    match /contacts/{docId} {
+      allow read:   if isAdmin();
+      allow create: if true;
+    }
+  }
+}
