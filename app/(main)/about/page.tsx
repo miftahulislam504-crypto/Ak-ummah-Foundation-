@@ -10,7 +10,7 @@ export default function AboutPage() {
         <div className="w-16 h-16 bg-gold-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
           <span className="text-3xl font-bold text-white font-arabic">ع</span>
         </div>
-        <h1 className="text-xl font-bold text-white mb-1">এক উম্মাহ ফাউন্ডেশন</html>
+        <h1 className="text-xl font-bold text-white mb-1">এক উম্মাহ ফাউন্ডেশন</h1>
         <p className="text-primary-200 text-sm">سُدْمُكْتَ সহায়তা, বিশ্বাসের বন্ধন</p>
         <p className="font-arabic text-white/70 text-lg mt-3">
           وَتَعَاوَنُوا عَلَى الْبِرِّ وَالتَّقْوَى
