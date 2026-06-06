@@ -160,7 +160,7 @@ export default function RegisterPage() {
         refCode,
         referredBy:  form.referredBy.toUpperCase() || null,
         role:        'member',
-        status:      'pending',
+        status:      'active',
         createdAt:   now,
         updatedAt:   now,
       });
