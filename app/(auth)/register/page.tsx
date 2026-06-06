@@ -5,17 +5,43 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { auth, db, storage } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
 import { generateId } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Upload, X, ChevronRight, ChevronLeft, Check } from 'lucide-react';
+
+// ─── Cloudinary config ───────────────────────────────────────────────────────
+const CLOUD_NAME   = 'dat7lfp1l';
+const UPLOAD_PRESET = 'ek-ummah-nid';
+
+async function uploadToCloudinary(file: File, side: string): Promise<string> {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', UPLOAD_PRESET);
+  formData.append('folder', 'ek-ummah-nid');
+  formData.append('public_id', `${side}_${Date.now()}`);
+
+  const res = await fetch(
+    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+    { method: 'POST', body: formData }
+  );
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.error?.message || 'Cloudinary upload failed');
+  }
+
+  const data = await res.json();
+  if (!data.secure_url) throw new Error('URL পাওয়া যায়নি');
+  return data.secure_url;
+}
+// ─────────────────────────────────────────────────────────────────────────────
 
 const STEPS = ['ব্যক্তিগত তথ্য', 'যোগাযোগ', 'NID যাচাই', 'সম্পন্ন'];
 
 export default function RegisterPage() {
   const router = useRouter();
-  const [step, setStep] = useState(0);
+  const [step,    setStep]    = useState(0);
   const [loading, setLoading] = useState(false);
 
   const nidFrontRef = useRef<HTMLInputElement>(null);
@@ -79,72 +105,88 @@ export default function RegisterPage() {
     if (!validateStep()) return;
     setLoading(true);
 
+    let authCreated = false;
+
     try {
-      // Check referral
+      // ১. Referral চেক
       let referralValid = false;
       if (form.referredBy) {
-        const q     = query(collection(db, 'users'), where('refCode', '==', form.referredBy.toUpperCase()));
-        const snap  = await getDocs(q);
+        const q    = query(collection(db, 'users'), where('refCode', '==', form.referredBy.toUpperCase()));
+        const snap = await getDocs(q);
         referralValid = !snap.empty;
-        if (!referralValid) { toast.error('রেফারেল কোড সঠিক নয়'); setLoading(false); return; }
+        if (!referralValid) {
+          toast.error('রেফারেল কোড সঠিক নয়');
+          setLoading(false);
+          return;
+        }
       }
 
-      // Create auth user
+      // ২. Firebase Auth এ user তৈরি
+      toast.loading('অ্যাকাউন্ট তৈরি হচ্ছে...', { id: 'reg' });
       const cred = await createUserWithEmailAndPassword(auth, form.email, form.password);
+      authCreated = true;
       await sendEmailVerification(cred.user);
-
-      // Upload NID images
       const uid = cred.user.uid;
-      const uploadFile = async (file: File, name: string) => {
-        const r = ref(storage, `nid/${uid}/${name}`);
-        await uploadBytes(r, file);
-        return getDownloadURL(r);
-      };
 
+      // ৩. Cloudinary তে NID ছবি upload
+      toast.loading('NID ছবি আপলোড হচ্ছে...', { id: 'reg' });
       const [frontUrl, backUrl] = await Promise.all([
-        uploadFile(nidFront!, 'front'),
-        uploadFile(nidBack!,  'back'),
+        uploadToCloudinary(nidFront!, `${uid}_front`),
+        uploadToCloudinary(nidBack!,  `${uid}_back`),
       ]);
 
-      // Save to Firestore
+      // ৪. Firestore এ save
+      toast.loading('তথ্য সংরক্ষণ হচ্ছে...', { id: 'reg' });
       const refCode = generateId('EU');
       const now     = new Date().toISOString();
 
       await setDoc(doc(db, 'users', uid), {
         uid,
-        name:         form.name.trim(),
-        email:        form.email.trim().toLowerCase(),
-        phone:        form.phone.trim(),
-        address:      form.address.trim(),
-        profession:   form.profession.trim(),
-        nidNumber:    form.nidNumber.trim(),
-        nidFrontUrl:  frontUrl,
-        nidBackUrl:   backUrl,
-        familyCount:  parseInt(form.familyCount),
+        name:        form.name.trim(),
+        email:       form.email.trim().toLowerCase(),
+        phone:       form.phone.trim(),
+        address:     form.address.trim(),
+        profession:  form.profession.trim(),
+        nidNumber:   form.nidNumber.trim(),
+        nidFrontUrl: frontUrl,
+        nidBackUrl:  backUrl,
+        familyCount: parseInt(form.familyCount),
         refCode,
-        referredBy:   form.referredBy.toUpperCase() || null,
-        role:         'member',
-        status:       'pending',
-        createdAt:    now,
-        updatedAt:    now,
+        referredBy:  form.referredBy.toUpperCase() || null,
+        role:        'member',
+        status:      'pending',
+        createdAt:   now,
+        updatedAt:   now,
       });
 
-      // Save referral record
+      // ৫. Referral record
       if (referralValid && form.referredBy) {
         await setDoc(doc(collection(db, 'referrals')), {
-          referredBy:  form.referredBy.toUpperCase(),
-          newMember:   uid,
+          referredBy:    form.referredBy.toUpperCase(),
+          newMember:     uid,
           newMemberName: form.name.trim(),
-          createdAt:   now,
+          createdAt:     now,
         });
       }
 
+      toast.success('নিবন্ধন সম্পন্ন!', { id: 'reg' });
       setStep(3);
+
     } catch (err: any) {
+      toast.dismiss('reg');
+
+      // Auth তৈরি হলে কিন্তু পরে fail হলে — delete করো
+      // যাতে একই email দিয়ে আবার register করা যায়
+      if (authCreated && auth.currentUser) {
+        try { await auth.currentUser.delete(); } catch (_) {}
+      }
+
       if (err.code === 'auth/email-already-in-use') {
         toast.error('এই ইমেইলে আগেই অ্যাকাউন্ট আছে');
+      } else if (err.message?.includes('Cloudinary') || err.message?.includes('upload')) {
+        toast.error('NID ছবি আপলোড ব্যর্থ হয়েছে। আবার চেষ্টা করুন');
       } else {
-        toast.error('নিবন্ধন করতে সমস্যা হয়েছে');
+        toast.error('নিবন্ধন ব্যর্থ: ' + (err.message || 'আবার চেষ্টা করুন'));
       }
     } finally {
       setLoading(false);
@@ -292,6 +334,10 @@ export default function RegisterPage() {
                   </button>
                 )}
               </div>
+
+              <p className="text-xs text-gray-400 text-center">
+                ছবি সর্বোচ্চ ৫MB • JPG / PNG
+              </p>
             </div>
           )}
 
