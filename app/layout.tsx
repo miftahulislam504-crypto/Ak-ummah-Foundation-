@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Noto_Sans_Bengali, Amiri } from 'next/font/google';
 import './globals.css';
 import AuthProvider from '@/components/providers/AuthProvider';
+import PWAProvider  from '@/components/providers/PWAProvider';
 import { Toaster } from 'sonner';
 
 const notoSansBengali = Noto_Sans_Bengali({
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="bn" className={`${notoSansBengali.variable} ${amiri.variable}`}>
       <body className="font-bangla bg-gray-50 text-gray-900 antialiased">
         <AuthProvider>
+        <PWAProvider>
           {children}
           <Toaster
             position="top-center"
@@ -38,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               style: { fontFamily: 'var(--font-bangla)' },
             }}
           />
+        </PWAProvider>
         </AuthProvider>
       </body>
     </html>

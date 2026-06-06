@@ -5,16 +5,17 @@ import Link from 'next/link';
 import {
   User, Lock, Bell, HelpCircle,
   ChevronRight, LogOut, Shield,
-  PiggyBank, Wallet, FileText
+  PiggyBank, Wallet, FileText,
+  Users, Calendar, MessageSquare, Info
 } from 'lucide-react';
 
 const MENU_ITEMS = [
   {
     group: 'অ্যাকাউন্ট',
     items: [
-      { href: '/profile',           icon: User,       label: 'প্রোফাইল দেখুন'       },
-      { href: '/settings/password', icon: Lock,       label: 'পাসওয়ার্ড পরিবর্তন'  },
-      { href: '/notifications',     icon: Bell,       label: 'নোটিফিকেশন'            },
+      { href: '/profile',           icon: User,          label: 'প্রোফাইল দেখুন'       },
+      { href: '/settings/password', icon: Lock,          label: 'পাসওয়ার্ড পরিবর্তন'  },
+      { href: '/notifications',     icon: Bell,          label: 'নোটিফিকেশন'            },
     ],
   },
   {
@@ -26,10 +27,19 @@ const MENU_ITEMS = [
     ],
   },
   {
+    group: 'সংগঠন',
+    items: [
+      { href: '/about',      icon: Info,          label: 'আমাদের সম্পর্কে' },
+      { href: '/team',       icon: Users,         label: 'আমাদের টিম'      },
+      { href: '/activities', icon: Calendar,      label: 'কার্যক্রম'        },
+      { href: '/contact',    icon: MessageSquare, label: 'যোগাযোগ করুন'    },
+    ],
+  },
+  {
     group: 'অন্যান্য',
     items: [
       { href: '/settings/privacy', icon: Shield,     label: 'গোপনীয়তা নীতি'     },
-      { href: '/settings/help',    icon: HelpCircle, label: 'সাহায্য ও যোগাযোগ' },
+      { href: '/settings/help',    icon: HelpCircle, label: 'সাহায্য'             },
     ],
   },
 ];

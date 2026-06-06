@@ -1,8 +1,8 @@
 'use client';
 
-import { Bell } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import Link from 'next/link';
+import NotificationBell from '@/components/notifications/NotificationBell';
 
 export default function TopBar() {
   const { user } = useAuthStore();
@@ -24,15 +24,11 @@ export default function TopBar() {
 
         {/* Right side */}
         <div className="flex items-center gap-2">
-          <Link
-            href="/notifications"
-            className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-primary-700 hover:bg-primary-600 transition-colors"
-          >
-            <Bell size={20} className="text-white" />
-            {/* Badge — will be dynamic later */}
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-gold-400 rounded-full" />
-          </Link>
 
+          {/* Notification bell — realtime badge */}
+          <NotificationBell />
+
+          {/* Profile avatar */}
           <Link href="/profile">
             <div className="w-10 h-10 rounded-xl bg-gold-500 flex items-center justify-center shadow">
               <span className="text-white font-bold text-sm">
