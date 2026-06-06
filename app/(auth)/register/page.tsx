@@ -10,30 +10,37 @@ import { generateId } from '@/lib/utils';
 import { toast } from 'sonner';
 import { Upload, X, ChevronRight, ChevronLeft, Check } from 'lucide-react';
 
-// ─── Cloudinary config ───────────────────────────────────────────────────────
-const CLOUD_NAME   = 'dat7lfp1i';
-const UPLOAD_PRESET = 'ek-ummah-nid';
+// ─── ছবি compress করে Base64 বানাও ─────────────────────────────────────────
+function compressAndConvertToBase64(file: File, maxWidth = 800): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width  = img.width;
+        let height = img.height;
 
-async function uploadToCloudinary(file: File, side: string): Promise<string> {
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('upload_preset', UPLOAD_PRESET);
-  formData.append('folder', 'ek-ummah-nid');
-  formData.append('public_id', `${side}_${Date.now()}`);
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width  = maxWidth;
+        }
 
-  const res = await fetch(
-    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-    { method: 'POST', body: formData }
-  );
+        canvas.width  = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, 0, 0, width, height);
 
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error?.message || 'Cloudinary upload failed');
-  }
-
-  const data = await res.json();
-  if (!data.secure_url) throw new Error('URL পাওয়া যায়নি');
-  return data.secure_url;
+        // JPEG quality 0.7 — ছোট size, ভালো মান
+        const base64 = canvas.toDataURL('image/jpeg', 0.7);
+        resolve(base64);
+      };
+      img.onerror = reject;
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -104,7 +111,6 @@ export default function RegisterPage() {
   async function handleSubmit() {
     if (!validateStep()) return;
     setLoading(true);
-
     let authCreated = false;
 
     try {
@@ -128,11 +134,11 @@ export default function RegisterPage() {
       await sendEmailVerification(cred.user);
       const uid = cred.user.uid;
 
-      // ৩. Cloudinary তে NID ছবি upload
-      toast.loading('NID ছবি আপলোড হচ্ছে...', { id: 'reg' });
-      const [frontUrl, backUrl] = await Promise.all([
-        uploadToCloudinary(nidFront!, `${uid}_front`),
-        uploadToCloudinary(nidBack!,  `${uid}_back`),
+      // ৩. ছবি compress করে Base64 বানাও
+      toast.loading('NID ছবি প্রক্রিয়া করা হচ্ছে...', { id: 'reg' });
+      const [frontBase64, backBase64] = await Promise.all([
+        compressAndConvertToBase64(nidFront!),
+        compressAndConvertToBase64(nidBack!),
       ]);
 
       // ৪. Firestore এ save
@@ -148,8 +154,8 @@ export default function RegisterPage() {
         address:     form.address.trim(),
         profession:  form.profession.trim(),
         nidNumber:   form.nidNumber.trim(),
-        nidFrontUrl: frontUrl,
-        nidBackUrl:  backUrl,
+        nidFrontUrl: frontBase64,
+        nidBackUrl:  backBase64,
         familyCount: parseInt(form.familyCount),
         refCode,
         referredBy:  form.referredBy.toUpperCase() || null,
@@ -175,16 +181,13 @@ export default function RegisterPage() {
     } catch (err: any) {
       toast.dismiss('reg');
 
-      // Auth তৈরি হলে কিন্তু পরে fail হলে — delete করো
-      // যাতে একই email দিয়ে আবার register করা যায়
+      // Auth তৈরি হলে কিন্তু পরে fail হলে delete করো
       if (authCreated && auth.currentUser) {
         try { await auth.currentUser.delete(); } catch (_) {}
       }
 
       if (err.code === 'auth/email-already-in-use') {
         toast.error('এই ইমেইলে আগেই অ্যাকাউন্ট আছে');
-      } else if (err.message?.includes('Cloudinary') || err.message?.includes('upload')) {
-        toast.error('NID ছবি আপলোড ব্যর্থ হয়েছে। আবার চেষ্টা করুন');
       } else {
         toast.error('নিবন্ধন ব্যর্থ: ' + (err.message || 'আবার চেষ্টা করুন'));
       }
@@ -236,7 +239,7 @@ export default function RegisterPage() {
 
         <div className="bg-white rounded-3xl shadow-2xl p-7">
 
-          {/* Step 0 — Personal info */}
+          {/* Step 0 */}
           {step === 0 && (
             <div className="space-y-4">
               <h2 className="text-lg font-bold text-gray-900 mb-4">ব্যক্তিগত তথ্য</h2>
@@ -265,7 +268,7 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {/* Step 1 — Contact */}
+          {/* Step 1 */}
           {step === 1 && (
             <div className="space-y-4">
               <h2 className="text-lg font-bold text-gray-900 mb-4">যোগাযোগের তথ্য</h2>
@@ -288,7 +291,7 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {/* Step 2 — NID */}
+          {/* Step 2 */}
           {step === 2 && (
             <div className="space-y-4">
               <h2 className="text-lg font-bold text-gray-900 mb-4">NID যাচাই</h2>
@@ -348,19 +351,15 @@ export default function RegisterPage() {
                 <Check size={40} className="text-green-600" />
               </div>
               <h2 className="text-xl font-bold text-gray-900 mb-2">নিবন্ধন সম্পন্ন!</h2>
-              <p className="text-gray-500 text-sm mb-2">
-                আপনার আবেদন সফলভাবে জমা হয়েছে।
-              </p>
-              <p className="text-gray-500 text-sm mb-6">
-                অ্যাডমিন অনুমোদনের পর আপনি লগইন করতে পারবেন।
-              </p>
+              <p className="text-gray-500 text-sm mb-2">আপনার আবেদন সফলভাবে জমা হয়েছে।</p>
+              <p className="text-gray-500 text-sm mb-6">অ্যাডমিন অনুমোদনের পর আপনি লগইন করতে পারবেন।</p>
               <button onClick={() => router.push('/login')} className="btn-primary w-full">
                 লগইন পেজে যান
               </button>
             </div>
           )}
 
-          {/* Navigation buttons */}
+          {/* Navigation */}
           {step < 3 && (
             <div className="flex gap-3 mt-6">
               {step > 0 && (
