@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { Upload, X, ChevronRight, ChevronLeft, Check } from 'lucide-react';
 
 // ─── Cloudinary config ───────────────────────────────────────────────────────
-const CLOUD_NAME   = 'dat7lfp1l';
+const CLOUD_NAME   = 'dat7lfp1i';
 const UPLOAD_PRESET = 'ek-ummah-nid';
 
 async function uploadToCloudinary(file: File, side: string): Promise<string> {
