@@ -1,58 +1,22 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import { doc, setDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
 import { generateId } from '@/lib/utils';
 import { toast } from 'sonner';
-import { Upload, X, ChevronRight, ChevronLeft, Check } from 'lucide-react';
+import { ChevronRight, ChevronLeft, Check } from 'lucide-react';
 
-// ─── ছবি compress করে Base64 বানাও ─────────────────────────────────────────
-function compressAndConvertToBase64(file: File, maxWidth = 800): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        let width  = img.width;
-        let height = img.height;
-
-        if (width > maxWidth) {
-          height = Math.round((height * maxWidth) / width);
-          width  = maxWidth;
-        }
-
-        canvas.width  = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d')!;
-        ctx.drawImage(img, 0, 0, width, height);
-
-        // JPEG quality 0.7 — ছোট size, ভালো মান
-        const base64 = canvas.toDataURL('image/jpeg', 0.7);
-        resolve(base64);
-      };
-      img.onerror = reject;
-      img.src = e.target?.result as string;
-    };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-// ─────────────────────────────────────────────────────────────────────────────
-
-const STEPS = ['ব্যক্তিগত তথ্য', 'যোগাযোগ', 'NID যাচাই', 'সম্পন্ন'];
+const STEPS = ['ব্যক্তিগত তথ্য', 'যোগাযোগ', 'সম্পন্ন'];
 
 export default function RegisterPage() {
   const router = useRouter();
   const [step,    setStep]    = useState(0);
   const [loading, setLoading] = useState(false);
-
-  const nidFrontRef = useRef<HTMLInputElement>(null);
-  const nidBackRef  = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
     name:        '',
@@ -62,30 +26,12 @@ export default function RegisterPage() {
     phone:       '',
     address:     '',
     profession:  '',
-    nidNumber:   '',
     familyCount: '1',
     referredBy:  '',
   });
 
-  const [nidFront, setNidFront] = useState<File | null>(null);
-  const [nidBack,  setNidBack]  = useState<File | null>(null);
-  const [nidFrontPreview, setNidFrontPreview] = useState('');
-  const [nidBackPreview,  setNidBackPreview]  = useState('');
-
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) {
     setForm({ ...form, [e.target.name]: e.target.value });
-  }
-
-  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>, side: 'front' | 'back') {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('ছবির সাইজ ৫MB এর বেশি হবে না');
-      return;
-    }
-    const url = URL.createObjectURL(file);
-    if (side === 'front') { setNidFront(file); setNidFrontPreview(url); }
-    else                  { setNidBack(file);  setNidBackPreview(url); }
   }
 
   function validateStep(): boolean {
@@ -99,11 +45,6 @@ export default function RegisterPage() {
       if (!form.phone.trim())      { toast.error('ফোন নম্বর দিন'); return false; }
       if (!form.address.trim())    { toast.error('ঠিকানা দিন'); return false; }
       if (!form.profession.trim()) { toast.error('পেশা দিন'); return false; }
-    }
-    if (step === 2) {
-      if (!form.nidNumber.trim()) { toast.error('NID নম্বর দিন'); return false; }
-      if (!nidFront)              { toast.error('NID-এর সামনের ছবি দিন'); return false; }
-      if (!nidBack)               { toast.error('NID-এর পিছনের ছবি দিন'); return false; }
     }
     return true;
   }
@@ -134,14 +75,7 @@ export default function RegisterPage() {
       await sendEmailVerification(cred.user);
       const uid = cred.user.uid;
 
-      // ৩. ছবি compress করে Base64 বানাও
-      toast.loading('NID ছবি প্রক্রিয়া করা হচ্ছে...', { id: 'reg' });
-      const [frontBase64, backBase64] = await Promise.all([
-        compressAndConvertToBase64(nidFront!),
-        compressAndConvertToBase64(nidBack!),
-      ]);
-
-      // ৪. Firestore এ save
+      // ৩. Firestore এ save
       toast.loading('তথ্য সংরক্ষণ হচ্ছে...', { id: 'reg' });
       const refCode = generateId('EU');
       const now     = new Date().toISOString();
@@ -153,9 +87,6 @@ export default function RegisterPage() {
         phone:       form.phone.trim(),
         address:     form.address.trim(),
         profession:  form.profession.trim(),
-        nidNumber:   form.nidNumber.trim(),
-        nidFrontUrl: frontBase64,
-        nidBackUrl:  backBase64,
         familyCount: parseInt(form.familyCount),
         refCode,
         referredBy:  form.referredBy.toUpperCase() || null,
@@ -165,7 +96,7 @@ export default function RegisterPage() {
         updatedAt:   now,
       });
 
-      // ৫. Referral record
+      // ৪. Referral record
       if (referralValid && form.referredBy) {
         await setDoc(doc(collection(db, 'referrals')), {
           referredBy:    form.referredBy.toUpperCase(),
@@ -176,12 +107,11 @@ export default function RegisterPage() {
       }
 
       toast.success('নিবন্ধন সম্পন্ন!', { id: 'reg' });
-      setStep(3);
+      setStep(2);
 
     } catch (err: any) {
       toast.dismiss('reg');
 
-      // Auth তৈরি হলে কিন্তু পরে fail হলে delete করো
       if (authCreated && auth.currentUser) {
         try { await auth.currentUser.delete(); } catch (_) {}
       }
@@ -198,7 +128,7 @@ export default function RegisterPage() {
 
   function next() {
     if (!validateStep()) return;
-    if (step === 2) { handleSubmit(); return; }
+    if (step === 1) { handleSubmit(); return; }
     setStep(step + 1);
   }
 
@@ -214,16 +144,23 @@ export default function RegisterPage() {
 
         {/* Logo */}
         <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gold-500 rounded-2xl mb-3 shadow-xl">
-            <span className="text-2xl font-bold text-white font-arabic">ع</span>
+          <div className="inline-flex items-center justify-center mb-3">
+            <Image
+              src="/logo.png"
+              alt="AK Ummah Foundation"
+              width={130}
+              height={130}
+              className="drop-shadow-2xl"
+              priority
+            />
           </div>
           <h1 className="text-xl font-bold text-white">সদস্য নিবন্ধন</h1>
         </div>
 
         {/* Step indicator */}
-        {step < 3 && (
+        {step < 2 && (
           <div className="flex items-center justify-center gap-2 mb-6">
-            {STEPS.slice(0, 3).map((s, i) => (
+            {STEPS.slice(0, 2).map((s, i) => (
               <div key={i} className="flex items-center gap-2">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all
                   ${i < step  ? 'bg-gold-500 text-white' :
@@ -231,7 +168,7 @@ export default function RegisterPage() {
                                  'bg-primary-700/50 text-primary-300'}`}>
                   {i < step ? <Check size={14} /> : i + 1}
                 </div>
-                {i < 2 && <div className={`w-8 h-0.5 ${i < step ? 'bg-gold-500' : 'bg-primary-700/50'}`} />}
+                {i < 1 && <div className={`w-8 h-0.5 ${i < step ? 'bg-gold-500' : 'bg-primary-700/50'}`} />}
               </div>
             ))}
           </div>
@@ -239,7 +176,7 @@ export default function RegisterPage() {
 
         <div className="bg-white rounded-3xl shadow-2xl p-7">
 
-          {/* Step 0 */}
+          {/* Step 0 — ব্যক্তিগত তথ্য */}
           {step === 0 && (
             <div className="space-y-4">
               <h2 className="text-lg font-bold text-gray-900 mb-4">ব্যক্তিগত তথ্য</h2>
@@ -268,7 +205,7 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {/* Step 1 */}
+          {/* Step 1 — যোগাযোগ */}
           {step === 1 && (
             <div className="space-y-4">
               <h2 className="text-lg font-bold text-gray-900 mb-4">যোগাযোগের তথ্য</h2>
@@ -291,61 +228,8 @@ export default function RegisterPage() {
             </div>
           )}
 
-          {/* Step 2 */}
+          {/* Step 2 — Success */}
           {step === 2 && (
-            <div className="space-y-4">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">NID যাচাই</h2>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">জাতীয় পরিচয়পত্র নম্বর *</label>
-                <input name="nidNumber" value={form.nidNumber} onChange={handleChange} placeholder="NID নম্বর দিন" className="input-field" />
-              </div>
-
-              {/* NID Front */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">NID সামনের অংশ *</label>
-                <input ref={nidFrontRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileSelect(e, 'front')} />
-                {nidFrontPreview ? (
-                  <div className="relative">
-                    <img src={nidFrontPreview} alt="NID Front" className="w-full h-36 object-cover rounded-xl border-2 border-primary-200" />
-                    <button onClick={() => { setNidFront(null); setNidFrontPreview(''); }} className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1">
-                      <X size={14} />
-                    </button>
-                  </div>
-                ) : (
-                  <button onClick={() => nidFrontRef.current?.click()} className="w-full h-28 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 text-gray-400 hover:border-primary-400 hover:text-primary-500 transition-colors">
-                    <Upload size={24} />
-                    <span className="text-sm">ক্লিক করে ছবি যোগ করুন</span>
-                  </button>
-                )}
-              </div>
-
-              {/* NID Back */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">NID পিছনের অংশ *</label>
-                <input ref={nidBackRef} type="file" accept="image/*" className="hidden" onChange={(e) => handleFileSelect(e, 'back')} />
-                {nidBackPreview ? (
-                  <div className="relative">
-                    <img src={nidBackPreview} alt="NID Back" className="w-full h-36 object-cover rounded-xl border-2 border-primary-200" />
-                    <button onClick={() => { setNidBack(null); setNidBackPreview(''); }} className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1">
-                      <X size={14} />
-                    </button>
-                  </div>
-                ) : (
-                  <button onClick={() => nidBackRef.current?.click()} className="w-full h-28 border-2 border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center gap-2 text-gray-400 hover:border-primary-400 hover:text-primary-500 transition-colors">
-                    <Upload size={24} />
-                    <span className="text-sm">ক্লিক করে ছবি যোগ করুন</span>
-                  </button>
-                )}
-              </div>
-
-              <p className="text-xs text-gray-400 text-center">
-                ছবি সর্বোচ্চ ৫MB • JPG / PNG
-              </p>
-            </div>
-          )}
-
-          {/* Step 3 — Success */}
-          {step === 3 && (
             <div className="text-center py-4">
               <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Check size={40} className="text-green-600" />
@@ -360,7 +244,7 @@ export default function RegisterPage() {
           )}
 
           {/* Navigation */}
-          {step < 3 && (
+          {step < 2 && (
             <div className="flex gap-3 mt-6">
               {step > 0 && (
                 <button onClick={() => setStep(step - 1)} className="btn-outline flex items-center gap-1 px-4">
@@ -370,7 +254,7 @@ export default function RegisterPage() {
               <button onClick={next} disabled={loading} className="btn-primary flex-1 flex items-center justify-center gap-2">
                 {loading ? (
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : step === 2 ? (
+                ) : step === 1 ? (
                   <><Check size={18} /> জমা দিন</>
                 ) : (
                   <>পরবর্তী <ChevronRight size={18} /></>

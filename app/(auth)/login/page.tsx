@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebase';
@@ -87,10 +88,16 @@ export default function LoginPage() {
 
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gold-500 rounded-2xl mb-4 shadow-2xl">
-            <span className="text-3xl font-bold text-white font-arabic">ع</span>
+          <div className="inline-flex items-center justify-center mb-4">
+            <Image
+              src="/logo.png"
+              alt="AK Ummah Foundation"
+              width={160}
+              height={160}
+              className="drop-shadow-2xl"
+              priority
+            />
           </div>
-          <h1 className="text-2xl font-bold text-white mb-1">এক উম্মাহ ফাউন্ডেশন</h1>
           <p className="text-primary-300 text-sm">সুদমুক্ত সহায়তা, বিশ্বাসের বন্ধন</p>
         </div>
 

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { toast } from 'sonner';
@@ -39,11 +40,18 @@ export default function ForgotPasswordPage() {
 
       <div className="relative w-full max-w-md">
 
+        {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gold-500 rounded-2xl mb-3 shadow-xl">
-            <span className="text-2xl font-bold text-white font-arabic">ع</span>
+          <div className="inline-flex items-center justify-center mb-4">
+            <Image
+              src="/logo.png"
+              alt="AK Ummah Foundation"
+              width={140}
+              height={140}
+              className="drop-shadow-2xl"
+              priority
+            />
           </div>
-          <h1 className="text-xl font-bold text-white">এক উম্মাহ ফাউন্ডেশন</h1>
         </div>
 
         <div className="bg-white rounded-3xl shadow-2xl p-8">
