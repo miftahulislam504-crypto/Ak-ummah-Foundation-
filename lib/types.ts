@@ -119,3 +119,27 @@ export interface Expense {
   createdBy:   string;
   createdAt:   string;
 }
+
+// ===== SAVING REQUEST =====
+export type SavingMethod        = 'bkash' | 'nagad' | 'rocket' | 'dbbl' | 'direct';
+export type SavingRequestStatus = 'pending' | 'approved' | 'rejected';
+
+export interface SavingRequest {
+  id:            string;
+  userId:        string;
+  userName:      string;
+  userPhone:     string;
+  amount:        number;
+  method:        SavingMethod;
+  transactionId: string;
+  status:        SavingRequestStatus;
+  note?:         string;
+  createdAt:     string;
+  approvedAt?:   string;
+  approvedBy?:   string;
+  receiptData?:  {
+    receiptNo:   string;
+    approvedAt:  string;
+    approvedBy:  string;
+  };
+}

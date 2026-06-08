@@ -1,17 +1,54 @@
 {
+  "id": "/",
   "name": "এক উম্মাহ ফাউন্ডেশন",
   "short_name": "এক উম্মাহ",
   "description": "সুদমুক্ত সহায়তা, বিশ্বাসের বন্ধন",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "background_color": "#14532d",
   "theme_color": "#166534",
   "orientation": "portrait",
+  "lang": "bn",
+  "dir": "ltr",
+  "categories": ["finance", "social", "lifestyle"],
+  "prefer_related_applications": false,
   "icons": [
-    { "src": "/icons/icon-72x72.png",   "sizes": "72x72",   "type": "image/png" },
-    { "src": "/icons/icon-96x96.png",   "sizes": "96x96",   "type": "image/png" },
-    { "src": "/icons/icon-128x128.png", "sizes": "128x128", "type": "image/png" },
-    { "src": "/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+    { "src": "/icons/icon-72x72.png",           "sizes": "72x72",   "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-96x96.png",           "sizes": "96x96",   "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-128x128.png",         "sizes": "128x128", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-144x144.png",         "sizes": "144x144", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-152x152.png",         "sizes": "152x152", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-192x192.png",         "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-384x384.png",         "sizes": "384x384", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512x512.png",         "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-192x192-maskable.png","sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/icon-512x512-maskable.png","sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "screenshots": [
+    {
+      "src": "/icons/screenshot-mobile.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "এক উম্মাহ ফাউন্ডেশন"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "ড্যাশবোর্ড",
+      "short_name": "ড্যাশবোর্ড",
+      "description": "আপনার ড্যাশবোর্ড দেখুন",
+      "url": "/dashboard",
+      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "ঋণ আবেদন",
+      "short_name": "ঋণ",
+      "description": "ঋণের জন্য আবেদন করুন",
+      "url": "/loans/apply",
+      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+    }
   ]
 }
