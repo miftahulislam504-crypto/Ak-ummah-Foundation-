@@ -2,7 +2,18 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { toBn } from '@/lib/utils';
-import { MapPin, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
+import { MapPin, RefreshCw, ChevronDown, ChevronUp, Moon, Sun, Cloud, Sunset, Star } from 'lucide-react';
+
+const PRAYER_ICON_MAP: Record<string, React.ElementType> = {
+  night:       Moon,
+  sun:         Sun,
+  'cloud-sun': Cloud,
+  sunset:      Sunset,
+};
+function PrayerIcon({ icon, className }: { icon: string; className?: string }) {
+  const I = PRAYER_ICON_MAP[icon] ?? Star;
+  return <I size={18} className={className} />;
+}
 
 interface PrayerData {
   key:      string;
@@ -65,11 +76,11 @@ export default function PrayerTimes() {
 
   const buildPrayers = useCallback((t: Record<string, string>): PrayerData[] => {
     const raw = [
-      { key: 'Fajr',    name: 'ফজর',    arabic: 'الفجر',  icon: '🌙', start: t.Fajr    },
-      { key: 'Dhuhr',   name: 'যোহর',   arabic: 'الظهر',  icon: '☀️', start: t.Dhuhr   },
-      { key: 'Asr',     name: 'আসর',    arabic: 'العصر',  icon: '⛅', start: t.Asr     },
-      { key: 'Maghrib', name: 'মাগরিব', arabic: 'المغرب', icon: '🌅', start: t.Maghrib },
-      { key: 'Isha',    name: 'ইশা',    arabic: 'العشاء', icon: '🌙', start: t.Isha    },
+      { key: 'Fajr',    name: 'ফজর',    arabic: 'الفجر',  icon: 'night', start: t.Fajr    },
+      { key: 'Dhuhr',   name: 'যোহর',   arabic: 'الظهر',  icon: 'sun', start: t.Dhuhr   },
+      { key: 'Asr',     name: 'আসর',    arabic: 'العصر',  icon: 'cloud-sun', start: t.Asr     },
+      { key: 'Maghrib', name: 'মাগরিব', arabic: 'المغرب', icon: 'sunset', start: t.Maghrib },
+      { key: 'Isha',    name: 'ইশা',    arabic: 'العشاء', icon: 'night', start: t.Isha    },
     ];
     return raw.map((p, i) => ({
       ...p,
@@ -85,21 +96,21 @@ export default function PrayerTimes() {
       {
         name:     'সূর্যোদয়',
         subtitle: 'সূর্য উঠার পর ১৫ মিনিট পর্যন্ত',
-        icon:     '☀️',
+        icon:     'sun',
         start:    sunrise,
         end:      addMins(sunrise, 15),
       },
       {
         name:     'দুপুর (ইস্তিওয়া)',
         subtitle: 'সূর্য মাথার ঠিক উপরে থাকার সময়',
-        icon:     '☀️',
+        icon:     'sun',
         start:    addMins(dhuhr, -6),
         end:      dhuhr,
       },
       {
         name:     'সূর্যাস্ত',
         subtitle: 'সূর্য ডোবার আগের ১৫ মিনিট',
-        icon:     '☀️',
+        icon:     'sun',
         start:    addMins(sunset, -15),
         end:      sunset,
       },
@@ -203,7 +214,7 @@ export default function PrayerTimes() {
       <div className="relative bg-gradient-to-br from-primary-900 via-primary-800 to-primary-700 rounded-3xl p-5 overflow-hidden shadow-lg">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-10 translate-x-10" />
         <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-8 -translate-x-8" />
-        <div className="absolute top-3 right-5 text-5xl opacity-10 font-arabic select-none">☽</div>
+        <div className="absolute top-3 right-5 text-5xl opacity-10 font-arabic select-none">هلال</div>
 
         {loading ? (
           <div className="py-4 text-center">
@@ -290,10 +301,10 @@ export default function PrayerTimes() {
                   }`}
                 >
                   {/* Icon */}
-                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl flex-shrink-0 ${
+                  <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${
                     isNext ? 'bg-primary-100' : 'bg-gray-50'
                   }`}>
-                    {p.icon}
+                    <PrayerIcon icon={p.icon} className={isNext ? 'text-primary-700' : 'text-gray-500'} />
                   </div>
 
                   {/* Name */}
@@ -327,8 +338,8 @@ export default function PrayerTimes() {
             <div className="space-y-3">
               {forbidden.map((f) => (
                 <div key={f.name} className="flex items-center gap-3">
-                  <div className="w-9 h-9 bg-white/10 rounded-xl flex items-center justify-center text-base flex-shrink-0">
-                    {f.icon}
+                  <div className="w-9 h-9 bg-white/10 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <PrayerIcon icon={f.icon} className="text-white/80" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-white text-sm font-semibold leading-tight">{f.name}</p>

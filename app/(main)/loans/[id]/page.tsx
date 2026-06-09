@@ -5,7 +5,11 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Loan } from '@/lib/types';
 import { formatTaka, getBanglaDate } from '@/lib/utils';
-import { ArrowLeft, Printer } from 'lucide-react';
+import {
+  ArrowLeft, Printer,
+  Stethoscope, ShoppingBag, BookOpen,
+  Wheat, AlertCircle, FileText,
+} from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { use } from 'react';
@@ -24,10 +28,24 @@ const statusLabel: Record<string, string> = {
   repaid:   'পরিশোধ হয়েছে',
 };
 
-const purposeIcon: Record<string, string> = {
-  চিকিৎসা: '🏥', ব্যবসা: '🏪', শিক্ষা: '📚',
-  কৃষি: '🌾',   'জরুরি প্রয়োজন': '🚨', অন্যান্য: '📋',
+// Lucide icon map — no emoji, no crash
+const purposeIconMap: Record<string, React.ElementType> = {
+  চিকিৎসা:         Stethoscope,
+  ব্যবসা:           ShoppingBag,
+  শিক্ষা:           BookOpen,
+  কৃষি:             Wheat,
+  'জরুরি প্রয়োজন': AlertCircle,
+  অন্যান্য:          FileText,
 };
+
+function getPurposeIcon(purpose: string): React.ElementType {
+  // exact match first, then check if it starts with a known key (e.g. "অন্যান্য: ...")
+  if (purposeIconMap[purpose]) return purposeIconMap[purpose];
+  for (const key of Object.keys(purposeIconMap)) {
+    if (purpose.startsWith(key)) return purposeIconMap[key];
+  }
+  return FileText;
+}
 
 export default function LoanDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id }   = use(params);
@@ -98,6 +116,8 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
     </div>
   );
 
+  const PurposeIcon = getPurposeIcon(loan.purpose);
+
   return (
     <div className="max-w-lg mx-auto px-4 py-5 space-y-4">
 
@@ -118,9 +138,12 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
       <div className="card-green">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-primary-200 text-sm">ঋণের পরিমাণ</p>
+            <p className="text-green-200 text-sm">ঋণের পরিমাণ</p>
             <p className="text-white text-3xl font-bold mt-1">{formatTaka(loan.amount)}</p>
-            <p className="text-primary-300 text-sm mt-1">{loan.purpose} {purposeIcon[loan.purpose]}</p>
+            <div className="flex items-center gap-1.5 mt-1.5">
+              <PurposeIcon size={14} className="text-green-300" />
+              <p className="text-green-300 text-sm">{loan.purpose}</p>
+            </div>
           </div>
           <span className={cn('text-xs px-3 py-1.5 rounded-full font-medium', statusStyle[loan.status])}>
             {statusLabel[loan.status]}
@@ -132,12 +155,12 @@ export default function LoanDetailPage({ params }: { params: Promise<{ id: strin
       <div className="card">
         <h3 className="font-semibold text-gray-800 mb-3">আবেদনকারীর তথ্য</h3>
         {[
-          { label: 'নাম',             value: loan.userName       },
-          { label: 'মোবাইল',          value: loan.userPhone      },
-          { label: 'ঠিকানা',          value: loan.userAddress    },
-          { label: 'পেশা',            value: loan.userProfession },
-          { label: 'মাসিক আয়',       value: formatTaka(loan.userIncome) },
-          { label: 'পরিশোধ পরিকল্পনা',value: loan.repaymentPlan  },
+          { label: 'নাম',              value: loan.userName       },
+          { label: 'মোবাইল',           value: loan.userPhone      },
+          { label: 'ঠিকানা',           value: loan.userAddress    },
+          { label: 'পেশা',             value: loan.userProfession },
+          { label: 'মাসিক আয়',        value: formatTaka(loan.userIncome) },
+          { label: 'পরিশোধ পরিকল্পনা', value: loan.repaymentPlan  },
         ].map(({ label, value }) => (
           <div key={label} className="flex justify-between py-2.5 border-b border-gray-50 last:border-0">
             <span className="text-sm text-gray-500">{label}</span>

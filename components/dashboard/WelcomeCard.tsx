@@ -15,7 +15,7 @@ export default function WelcomeCard({ user }: Props) {
       {/* Background decorations */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -translate-y-8 translate-x-8" />
       <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/5 rounded-full translate-y-6 -translate-x-6" />
-      <div className="absolute top-4 right-8 text-4xl opacity-10 font-arabic">☽</div>
+      <div className="absolute top-4 right-8 text-4xl opacity-10 font-arabic">هلال</div>
 
       {/* Bismillah */}
       <p className="font-arabic text-right text-white/80 text-lg mb-3 leading-relaxed">

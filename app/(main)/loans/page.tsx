@@ -6,7 +6,7 @@ import { db } from '@/lib/firebase';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Loan } from '@/lib/types';
 import { formatTaka, getRelativeTime } from '@/lib/utils';
-import { CreditCard, Plus } from 'lucide-react';
+import { CreditCard, Plus, Stethoscope, ShoppingBag, BookOpen, Wheat, AlertCircle, FileText } from 'lucide-react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
@@ -32,10 +32,22 @@ const statusLabel: Record<string, string> = {
   repaid:   'পরিশোধিত',
 };
 
-const purposeIcon: Record<string, string> = {
-  চিকিৎসা: '🏥', ব্যবসা: '🏪', শিক্ষা: '📚',
-  কৃষি: '🌾',   'জরুরি প্রয়োজন': '🚨', অন্যান্য: '📋',
+const purposeIconMap: Record<string, React.ElementType> = {
+  চিকিৎসা:         Stethoscope,
+  ব্যবসা:           ShoppingBag,
+  শিক্ষা:           BookOpen,
+  কৃষি:             Wheat,
+  'জরুরি প্রয়োজন': AlertCircle,
+  অন্যান্য:          FileText,
 };
+
+function getPurposeIcon(purpose: string): React.ElementType {
+  if (purposeIconMap[purpose]) return purposeIconMap[purpose];
+  for (const key of Object.keys(purposeIconMap)) {
+    if (purpose.startsWith(key)) return purposeIconMap[key];
+  }
+  return FileText;
+}
 
 export default function LoansPage() {
   const { user }   = useAuthStore();
@@ -87,8 +99,8 @@ export default function LoansPage() {
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
           <p className="text-sm font-medium text-amber-800">
             {hasActiveLoan
-              ? '⚠️ আপনার একটি সক্রিয় ঋণ আছে। পরিশোধের আগে নতুন আবেদন করা যাবে না।'
-              : '⏳ আপনার একটি ঋণ আবেদন অনুমোদনের অপেক্ষায় আছে।'}
+              ? 'আপনার একটি সক্রিয় ঋণ আছে। পরিশোধের আগে নতুন আবেদন করা যাবে না।'
+              : 'আপনার একটি ঋণ আবেদন অনুমোদনের অপেক্ষায় আছে।'}
           </p>
         </div>
       )}
@@ -136,8 +148,8 @@ export default function LoansPage() {
             <Link key={l.id} href={`/loans/${l.id}`}>
               <div className="card hover:shadow-md transition-shadow active:scale-98">
                 <div className="flex items-start gap-3">
-                  <div className="w-11 h-11 bg-blue-100 rounded-xl flex items-center justify-center shrink-0 text-xl">
-                    {purposeIcon[l.purpose] || '📋'}
+                  <div className="w-11 h-11 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
+                    {(() => { const I = getPurposeIcon(l.purpose); return <I size={22} className="text-blue-500" />; })()}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">

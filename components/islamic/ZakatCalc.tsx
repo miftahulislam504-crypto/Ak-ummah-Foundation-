@@ -102,7 +102,7 @@ export default function ZakatCalc() {
             <div className="flex justify-between py-2 border-b border-gray-100">
               <span className="text-sm text-gray-500">যাকাত প্রযোজ্য?</span>
               <span className={`text-sm font-bold ${result.eligible ? 'text-green-600' : 'text-red-500'}`}>
-                {result.eligible ? '✅ হ্যাঁ' : '❌ না'}
+                {result.eligible ? 'হ্যাঁ' : 'না'}
               </span>
             </div>
             {result.eligible && (
