@@ -80,13 +80,14 @@ export interface Loan {
 
 // ===== NOTIFICATION =====
 export interface Notification {
-  id:        string;
-  userId:    string;
-  title:     string;
-  message:   string;
-  type:      'info' | 'success' | 'warning' | 'error';
-  read:      boolean;
-  createdAt: string;
+  id:         string;
+  userId:     string;
+  title:      string;
+  message:    string;
+  type:       'info' | 'success' | 'warning' | 'error';
+  read:       boolean;
+  createdAt:  string;
+  relatedId?: string;
 }
 
 // ===== NOTICE =====
