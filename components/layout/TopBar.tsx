@@ -58,10 +58,11 @@ export default function TopBar() {
 
             {/* Profile avatar */}
             <Link href="/profile">
-              <div className="w-9 h-9 rounded-xl bg-gold-500 flex items-center justify-center shadow">
-                <span className="text-white font-bold text-sm">
-                  {user?.name?.charAt(0)?.toUpperCase() || 'ম'}
-                </span>
+              <div className="w-9 h-9 rounded-xl bg-gold-500 flex items-center justify-center shadow overflow-hidden">
+                {(user as unknown as Record<string, string>)?.photoUrl
+                  ? <img src={(user as unknown as Record<string, string>).photoUrl} alt="profile" className="w-full h-full object-cover" />
+                  : <span className="text-white font-bold text-sm">{user?.name?.charAt(0)?.toUpperCase() || 'ম'}</span>
+                }
               </div>
             </Link>
 
