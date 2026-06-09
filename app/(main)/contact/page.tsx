@@ -87,9 +87,9 @@ export default function ContactPage() {
       {/* Contact info cards */}
       <div className="grid grid-cols-1 gap-3">
         {[
-          { icon: Phone,   label: 'ফোন',    value: '+880 1XXX-XXXXXX',              color: 'bg-green-100 text-green-700', href: 'tel:+8801XXXXXXXXX' },
-          { icon: Mail,    label: 'ইমেইল',  value: 'info@ekummah.org',              color: 'bg-blue-100  text-blue-700',  href: 'mailto:info@ekummah.org' },
-          { icon: MapPin,  label: 'ঠিকানা', value: 'ঢাকা, বাংলাদেশ',              color: 'bg-red-100   text-red-600',   href: null },
+          { icon: Phone,   label: 'ফোন',    value: '01872839294',                         color: 'bg-green-100 text-green-700', href: 'tel:+8801872839294' },
+          { icon: Mail,    label: 'ইমেইল',  value: 'akummahfoundation@gmail.com',          color: 'bg-blue-100  text-blue-700',  href: 'mailto:akummahfoundation@gmail.com' },
+          { icon: MapPin,  label: 'ঠিকানা', value: 'পঞ্চক্রোশী, উল্লাপাড়া, সিরাজগঞ্জ', color: 'bg-red-100   text-red-600',   href: null },
         ].map(({ icon: Icon, label, value, color, href }) => (
           <div key={label} className="card flex items-center gap-3 py-3.5">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${color}`}>

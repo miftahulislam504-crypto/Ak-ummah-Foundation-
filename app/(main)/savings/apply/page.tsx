@@ -7,15 +7,15 @@ import { db } from '@/lib/firebase';
 import { useAuthStore } from '@/store/useAuthStore';
 import { SavingMethod } from '@/lib/types';
 import { toast } from 'sonner';
-import { ArrowLeft, Check } from 'lucide-react';
+import { ArrowLeft, Check, Copy } from 'lucide-react';
 import Link from 'next/link';
 
-const METHODS: { key: SavingMethod; label: string; number: string }[] = [
-  { key: 'bkash',  label: 'বিকাশ',     number: '01XXXXXXXXX' },
-  { key: 'nagad',  label: 'নগদ',        number: '01XXXXXXXXX' },
-  { key: 'rocket', label: 'রকেট',       number: '01XXXXXXXXX' },
-  { key: 'dbbl',   label: 'ডাচ-বাংলা', number: '01XXXXXXXXX' },
-  { key: 'direct', label: 'সরাসরি জমা', number: ''            },
+const METHODS: { key: SavingMethod; label: string; number: string; note: string }[] = [
+  { key: 'bkash',  label: 'বিকাশ',     number: '01872839294',   note: 'Send Money' },
+  { key: 'nagad',  label: 'নগদ',        number: '01872839294',   note: 'Send Money' },
+  { key: 'rocket', label: 'রকেট',       number: '01872839294',   note: 'Send Money' },
+  { key: 'dbbl',   label: 'ডাচ-বাংলা', number: '1577348553926', note: 'MIFTAHUL ISLAM' },
+  { key: 'direct', label: 'সরাসরি জমা', number: '',              note: '' },
 ];
 
 export default function SavingApplyPage() {
@@ -27,8 +27,16 @@ export default function SavingApplyPage() {
   const [txId,    setTxId]    = useState('');
   const [note,    setNote]    = useState('');
   const [loading, setLoading] = useState(false);
+  const [copied,  setCopied]  = useState(false);
 
   const selectedMethod = METHODS.find(m => m.key === method);
+
+  function copyNumber() {
+    if (!selectedMethod?.number) return;
+    navigator.clipboard.writeText(selectedMethod.number);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -149,7 +157,19 @@ export default function SavingApplyPage() {
           {selectedMethod?.number && (
             <div className="bg-primary-50 rounded-xl p-3 border border-primary-100">
               <p className="text-xs text-gray-500 mb-1">{selectedMethod.label} নম্বরে পাঠান</p>
-              <p className="text-lg font-bold text-primary-800 tracking-wider">{selectedMethod.number}</p>
+              <div className="flex items-center justify-between">
+                <p className="text-lg font-bold text-primary-800 tracking-wider">{selectedMethod.number}</p>
+                <button
+                  type="button"
+                  onClick={copyNumber}
+                  className="w-8 h-8 bg-primary-700 text-white rounded-lg flex items-center justify-center transition-all active:scale-90"
+                >
+                  {copied ? <Check size={14} /> : <Copy size={14} />}
+                </button>
+              </div>
+              {selectedMethod.note && (
+                <p className="text-xs text-primary-600 mt-1">{selectedMethod.note}</p>
+              )}
             </div>
           )}
 
