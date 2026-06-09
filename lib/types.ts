@@ -49,7 +49,7 @@ export interface Donation {
 }
 
 // ===== LOAN =====
-export type LoanPurpose = 'চিকিৎসা' | 'ব্যবসা' | 'শিক্ষা' | 'কৃষি' | 'জরুরি' | 'অন্যান্য';
+export type LoanPurpose = 'চিকিৎসা' | 'ব্যবসা' | 'শিক্ষা' | 'কৃষি' | 'জরুরি প্রয়োজন' | 'অন্যান্য';
 export type LoanStatus  = 'pending' | 'approved' | 'rejected' | 'repaid';
 
 export interface Guarantor {
