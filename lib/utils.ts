@@ -27,34 +27,28 @@ export function getBanglaDate(date?: Date): string {
 // ===== হিজরি তারিখ =====
 export function getHijriDate(date?: Date): string {
   const d = date || new Date();
-  const jd =
-    Math.floor((14 + 12 * d.getFullYear() - Math.floor((14 - (d.getMonth() + 1)) / 12)) / 12) +
-    d.getDate() +
-    Math.floor(
-      (153 * ((d.getMonth() + 1) + 12 * Math.floor((14 - (d.getMonth() + 1)) / 12) - 3) + 2) / 5
-    ) +
-    365 * (d.getFullYear() + 4800 - Math.floor((14 - (d.getMonth() + 1)) / 12)) +
-    Math.floor((d.getFullYear() + 4800 - Math.floor((14 - (d.getMonth() + 1)) / 12)) / 4) -
-    Math.floor((d.getFullYear() + 4800 - Math.floor((14 - (d.getMonth() + 1)) / 12)) / 100) +
-    Math.floor((d.getFullYear() + 4800 - Math.floor((14 - (d.getMonth() + 1)) / 12)) / 400) -
-    32045;
-  const l  = jd - 1948440 + 10632;
-  const n  = Math.floor((l - 1) / 10631);
-  const l2 = l - 10631 * n + 354;
-  const j  = Math.floor((10985 - l2) / 5316) * Math.floor(50 * l2 / 17719) +
-             Math.floor(l2 / 5670) * Math.floor(43 * l2 / 15238);
-  const l3 = l2 - Math.floor((30 - j) / 15) * Math.floor(17719 * j / 50) -
-             Math.floor(j / 16) * Math.floor(15238 * j / 43) + 29;
-  const hMonth = Math.floor(24 * l3 / 709);
-  const hDay   = l3 - Math.floor(709 * hMonth / 24);
-  const hYear  = 30 * n + j - 30;
 
   const hijriMonths = [
     'মুহাররম', 'সফর', 'রবিউল আউয়াল', 'রবিউস সানি',
     'জমাদিউল আউয়াল', 'জমাদিউস সানি', 'রজব', 'শাবান',
     'রমজান', 'শাওয়াল', 'জিলকদ', 'জিলহজ',
   ];
-  return `${toBn(hDay)} ${hijriMonths[hMonth - 1]} ${toBn(hYear)} হিজরি`;
+
+  try {
+    const fmt = new Intl.DateTimeFormat('en-u-ca-islamic-umalqura', {
+      day:   'numeric',
+      month: 'numeric',
+      year:  'numeric',
+    });
+    const parts  = fmt.formatToParts(d);
+    const get    = (type: string) => parts.find(p => p.type === type)?.value || '0';
+    const hDay   = parseInt(get('day'),   10);
+    const hMonth = parseInt(get('month'), 10);
+    const hYear  = parseInt(get('year'),  10);
+    return `${toBn(hDay)} ${hijriMonths[hMonth - 1]} ${toBn(hYear)} হিজরি`;
+  } catch {
+    return '';
+  }
 }
 
 // ===== Random ID =====

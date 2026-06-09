@@ -24,7 +24,7 @@ export interface User {
 // ===== DONATION =====
 export type DonationMethod  = 'bkash' | 'nagad' | 'rocket' | 'dbbl' | 'sslcommerz' | 'direct';
 export type DonationStatus  = 'pending' | 'confirmed' | 'rejected';
-export type DonationType    = 'সাধারণ' | 'পারিবারিক সদস্য' | 'বিশেষ' | 'যাকাত' | 'ফিতরা';
+export type DonationType    = 'সাধারণ' | 'মাসিক দান' | 'বিশেষ' | 'যাকাত' | 'ফিতরা';
 
 export interface FamilyMember {
   name:         string;
@@ -37,7 +37,7 @@ export interface Donation {
   userName:      string;
   userPhone:     string;
   amount:        number;
-  type:          DonationType;
+  type:          DonationType | string;
   method:        DonationMethod;
   transactionId: string;
   status:        DonationStatus;
