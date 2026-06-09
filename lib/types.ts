@@ -68,7 +68,7 @@ export interface Loan {
   userProfession:  string;
   userIncome:      number;
   amount:          number;
-  purpose:         LoanPurpose;
+  purpose:         LoanPurpose | string;
   repaymentPlan:   string;
   guarantors:      Guarantor[];
   status:          LoanStatus;

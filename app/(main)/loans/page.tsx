@@ -34,7 +34,7 @@ const statusLabel: Record<string, string> = {
 
 const purposeIcon: Record<string, string> = {
   চিকিৎসা: '🏥', ব্যবসা: '🏪', শিক্ষা: '📚',
-  কৃষি: '🌾',   জরুরি প্রয়োজন: '🚨', অন্যান্য: '📋',
+  কৃষি: '🌾',   'জরুরি প্রয়োজন': '🚨', অন্যান্য: '📋',
 };
 
 export default function LoansPage() {
