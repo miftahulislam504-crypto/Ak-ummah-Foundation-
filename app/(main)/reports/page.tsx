@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { collection, query, where, getDocs, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, getDocs, orderBy, onSnapshot, getCountFromServer } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Donation, Loan, Saving, Expense } from '@/lib/types';
 import { formatTaka, getBanglaDate, toBn } from '@/lib/utils';
@@ -50,12 +50,16 @@ export default function ReportsPage() {
   const [loading,   setLoading]   = useState(false);
   const [members,   setMembers]   = useState(0);
 
-  // মোট সদস্য realtime
+  // মোট সদস্য — users collection থেকে সরাসরি count
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'public_stats'), (snap) => {
-      if (!snap.empty) setMembers(snap.docs[0].data().totalMembers || 0);
-    });
-    return () => unsub();
+    getCountFromServer(query(collection(db, 'users'), where('status', '==', 'active')))
+      .then(snap => setMembers(snap.data().count))
+      .catch(() => {
+        // fallback: public_stats
+        onSnapshot(collection(db, 'public_stats'), (snap) => {
+          if (!snap.empty) setMembers(snap.docs[0].data().totalMembers || 0);
+        });
+      });
   }, []);
 
   // সব ডেটা date range অনুযায়ী
