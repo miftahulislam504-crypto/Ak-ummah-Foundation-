@@ -51,7 +51,7 @@ export default function NewDonationPage() {
 
   async function handleManualSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!amount || parseFloat(amount) < 100) { toast.error('ন্যূনতম ১০০ টাকা দান করুন'); return; }
+    if (!amount || parseFloat(amount) < 10) { toast.error('ন্যূনতম ১০ টাকা দান করুন'); return; }
     if (method !== 'direct' && !txId.trim())  { toast.error('ট্রানজেকশন আইডি দিন'); return; }
     if (donType === 'মাসিক দান' && !donMonth) { toast.error('কোন মাসের দান তা বেছে নিন'); return; }
 
@@ -79,7 +79,7 @@ export default function NewDonationPage() {
   }
 
   async function handleOnlinePayment() {
-    if (!amount || parseFloat(amount) < 100) { toast.error('ন্যূনতম ১০০ টাকা দিন'); return; }
+    if (!amount || parseFloat(amount) < 10) { toast.error('ন্যূনতম ১০ টাকা দিন'); return; }
     if (donType === 'মাসিক দান' && !donMonth) { toast.error('কোন মাসের দান তা বেছে নিন'); return; }
     setLoading(true);
     try {
@@ -168,11 +168,11 @@ export default function NewDonationPage() {
           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-medium">৳</span>
           <input type="number" value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            placeholder="০" min="100"
+            placeholder="০" min="10"
             className="input-field pl-8 text-lg font-semibold" />
         </div>
         <div className="flex gap-2 flex-wrap">
-          {[100, 200, 500, 1000, 2000, 5000].map((n) => (
+          {[10, 50, 100, 200, 500, 1000, 2000, 5000].map((n) => (
             <button key={n} onClick={() => setAmount(String(n))}
               className={`px-3 py-1 rounded-lg text-sm border transition-all ${
                 amount === String(n)
