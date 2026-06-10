@@ -8,7 +8,6 @@ import { getBanglaDate, getHijriDate, toBn, formatTaka } from '@/lib/utils';
 import { Donation, Loan, Notice } from '@/lib/types';
 import WelcomeCard from '@/components/dashboard/WelcomeCard';
 import StatsCard from '@/components/dashboard/StatsCard';
-import PublicStats from '@/components/dashboard/PublicStats';
 import NoticeBoard from '@/components/dashboard/NoticeBoard';
 import QuickActions from '@/components/dashboard/QuickActions';
 import RecentActivity from '@/components/dashboard/RecentActivity';
@@ -19,8 +18,6 @@ export default function DashboardPage() {
   const [donations,     setDonations]     = useState<Donation[]>([]);
   const [loans,         setLoans]         = useState<Loan[]>([]);
   const [notices,       setNotices]       = useState<Notice[]>([]);
-  const [publicStats,   setPublicStats]   = useState({ totalDonation: 0, totalMembers: 0, totalLoans: 0 });
-  const [loadingStats,  setLoadingStats]  = useState(true);
 
   // Member's own donations
   useEffect(() => {
@@ -52,22 +49,6 @@ export default function DashboardPage() {
     return () => unsub();
   }, [user]);
 
-  // Public stats — realtime
-  useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'public_stats'), (snap) => {
-      if (!snap.empty) {
-        const data = snap.docs[0].data();
-        setPublicStats({
-          totalDonation: data.totalDonation || 0,
-          totalMembers:  data.totalMembers  || 0,
-          totalLoans:    data.totalLoans    || 0,
-        });
-      }
-      setLoadingStats(false);
-    });
-    return () => unsub();
-  }, []);
-
   // Notices
   useEffect(() => {
     const q = query(collection(db, 'notices'), orderBy('createdAt', 'desc'), limit(3));
@@ -97,9 +78,6 @@ export default function DashboardPage() {
 
       {/* Quick action buttons */}
       <QuickActions />
-
-      {/* Public foundation stats */}
-      <PublicStats stats={publicStats} loading={loadingStats} />
 
       {/* Notice board */}
       {notices.length > 0 && <NoticeBoard notices={notices} />}
