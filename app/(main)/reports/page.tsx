@@ -4,9 +4,9 @@ import { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuthStore } from '@/store/useAuthStore';
-import { Donation, Loan } from '@/lib/types';
+import { Donation, Loan, Saving, Expense } from '@/lib/types';
 import { formatTaka, getBanglaDate, toBn } from '@/lib/utils';
-import { FileText, Printer, Filter, TrendingUp } from 'lucide-react';
+import { FileText, Printer, Filter, TrendingUp, Wallet, PiggyBank, ArrowDownCircle, Users, CreditCard, Heart } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 
@@ -34,60 +34,85 @@ function getDateRange(range: RangeKey): { from: Date; to: Date } {
 export default function ReportsPage() {
   const { user } = useAuthStore();
 
-  const [range,       setRange]       = useState<RangeKey>('this_month');
-  const [donations,   setDonations]   = useState<Donation[]>([]);
-  const [loans,       setLoans]       = useState<Loan[]>([]);
-  const [loading,     setLoading]     = useState(false);
-  const [totalFund,   setTotalFund]   = useState(0); // মোট তহবিল from public_stats
+  const [range,         setRange]         = useState<RangeKey>('this_month');
+  const [donations,     setDonations]     = useState<Donation[]>([]);
+  const [loans,         setLoans]         = useState<Loan[]>([]);
+  const [savings,       setSavings]       = useState<Saving[]>([]);
+  const [expenses,      setExpenses]      = useState<Expense[]>([]);
+  const [loading,       setLoading]       = useState(false);
 
-  // ── মোট তহবিল: realtime ──
+  // Public stats from Firestore
+  const [totalFund,     setTotalFund]     = useState(0);
+  const [totalMembers,  setTotalMembers]  = useState(0);
+  const [totalLoansAmt, setTotalLoansAmt] = useState(0);
+
+  // ── Public stats: realtime ──
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'public_stats'), (snap) => {
       if (!snap.empty) {
         const data = snap.docs[0].data();
         setTotalFund(data.totalDonation || 0);
+        setTotalMembers(data.totalMembers || 0);
+        setTotalLoansAmt(data.totalLoans || 0);
       }
     });
     return () => unsub();
   }, []);
 
-  // ── Member data ──
+  // ── All foundation data by date range ──
   useEffect(() => {
-    if (!user) return;
     setLoading(true);
     const { from, to } = getDateRange(range);
     const fromISO = from.toISOString();
     const toISO   = to.toISOString();
 
     Promise.all([
+      // All donations (not filtered by user)
       getDocs(query(
         collection(db, 'donations'),
-        where('userId', '==', user.uid),
         where('createdAt', '>=', fromISO),
         where('createdAt', '<=', toISO),
         orderBy('createdAt', 'desc')
       )),
+      // All loans
       getDocs(query(
         collection(db, 'loans'),
-        where('userId', '==', user.uid),
+        where('createdAt', '>=', fromISO),
+        where('createdAt', '<=', toISO),
+        orderBy('createdAt', 'desc')
+      )),
+      // All savings
+      getDocs(query(
+        collection(db, 'savings'),
+        where('createdAt', '>=', fromISO),
+        where('createdAt', '<=', toISO),
+        orderBy('createdAt', 'desc')
+      )),
+      // All expenses
+      getDocs(query(
+        collection(db, 'expenses'),
         where('createdAt', '>=', fromISO),
         where('createdAt', '<=', toISO),
         orderBy('createdAt', 'desc')
       )),
     ])
-      .then(([donSnap, loanSnap]) => {
+      .then(([donSnap, loanSnap, savSnap, expSnap]) => {
         setDonations(donSnap.docs.map(d => ({ id: d.id, ...d.data() } as Donation)));
         setLoans(loanSnap.docs.map(d => ({ id: d.id, ...d.data() } as Loan)));
+        setSavings(savSnap.docs.map(d => ({ id: d.id, ...d.data() } as Saving)));
+        setExpenses(expSnap.docs.map(d => ({ id: d.id, ...d.data() } as Expense)));
       })
       .catch(() => toast.error('ডেটা লোড করতে সমস্যা হয়েছে'))
       .finally(() => setLoading(false));
-  }, [range, user]);
+  }, [range]);
 
   // ── Computed stats ──
-  const confirmedDons   = donations.filter(d => d.status === 'confirmed');
-  const totalDonated    = confirmedDons.reduce((s, d) => s + d.amount, 0);
-  const approvedLoans   = loans.filter(l => l.status === 'approved');
-  const totalLoanAmt    = approvedLoans.reduce((s, l) => s + l.amount, 0);
+  const confirmedDons    = donations.filter(d => d.status === 'confirmed');
+  const totalDonated     = confirmedDons.reduce((s, d) => s + d.amount, 0);
+  const approvedLoans    = loans.filter(l => l.status === 'approved');
+  const totalApprovedAmt = approvedLoans.reduce((s, l) => s + l.amount, 0);
+  const totalSavings     = savings.reduce((s, sv) => s + sv.amount, 0);
+  const totalExpenses    = expenses.reduce((s, e) => s + e.amount, 0);
 
   // ── Print ──
   function handlePrint() {
@@ -97,7 +122,7 @@ export default function ReportsPage() {
       <html lang="bn">
       <head>
         <meta charset="UTF-8">
-        <title>রিপোর্ট — এক উম্মাহ ফাউন্ডেশন</title>
+        <title>ফাউন্ডেশন রিপোর্ট — এক উম্মাহ ফাউন্ডেশন</title>
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Bengali:wght@400;600;700&display=swap" rel="stylesheet">
         <style>
           * { margin:0; padding:0; box-sizing:border-box; }
@@ -106,11 +131,15 @@ export default function ReportsPage() {
           .sub { color:#555; font-size:12px; margin-bottom:20px; }
           .summary { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-bottom:24px; }
           .stat { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px; }
-          .stat.blue { background:#eff6ff; border-color:#bfdbfe; }
-          .stat.gold { background:#fefce8; border-color:#fde68a; }
+          .stat.blue  { background:#eff6ff; border-color:#bfdbfe; }
+          .stat.gold  { background:#fefce8; border-color:#fde68a; }
+          .stat.red   { background:#fef2f2; border-color:#fecaca; }
+          .stat.purple{ background:#faf5ff; border-color:#e9d5ff; }
           .stat-val { font-size:20px; font-weight:700; color:#166534; }
-          .stat.blue .stat-val { color:#1d4ed8; }
-          .stat.gold .stat-val { color:#92400e; }
+          .stat.blue   .stat-val { color:#1d4ed8; }
+          .stat.gold   .stat-val { color:#92400e; }
+          .stat.red    .stat-val { color:#991b1b; }
+          .stat.purple .stat-val { color:#6b21a8; }
           .stat-lbl { font-size:11px; color:#666; margin-top:2px; }
           table { width:100%; border-collapse:collapse; margin-bottom:24px; }
           th { background:#166534; color:white; padding:8px 10px; text-align:left; font-size:12px; }
@@ -128,40 +157,53 @@ export default function ReportsPage() {
       </head>
       <body>
         <h1>এক উম্মাহ ফাউন্ডেশন</h1>
-        <p class="sub">সদস্য রিপোর্ট — ${rangeLabel} | সদস্য: ${user?.name} | তৈরি: ${getBanglaDate()}</p>
+        <p class="sub">ফাউন্ডেশন রিপোর্ট — ${rangeLabel} | তৈরি: ${getBanglaDate()}</p>
 
         <div class="summary">
           <div class="stat gold" style="grid-column:span 2">
             <div class="stat-val">৳${totalFund.toLocaleString()}</div>
-            <div class="stat-lbl">ফাউন্ডেশনের মোট তহবিল</div>
+            <div class="stat-lbl">ফাউন্ডেশনের মোট তহবিল (সর্বকালীন)</div>
           </div>
           <div class="stat">
             <div class="stat-val">৳${totalDonated.toLocaleString()}</div>
-            <div class="stat-lbl">আপনার নিশ্চিত দান</div>
+            <div class="stat-lbl">মোট দান (${rangeLabel})</div>
           </div>
           <div class="stat">
             <div class="stat-val">${confirmedDons.length}টি</div>
             <div class="stat-lbl">দানের সংখ্যা</div>
           </div>
           <div class="stat blue">
-            <div class="stat-val">৳${totalLoanAmt.toLocaleString()}</div>
+            <div class="stat-val">৳${totalApprovedAmt.toLocaleString()}</div>
             <div class="stat-lbl">অনুমোদিত ঋণ</div>
           </div>
           <div class="stat blue">
             <div class="stat-val">${loans.length}টি</div>
             <div class="stat-lbl">ঋণ আবেদন</div>
           </div>
+          <div class="stat purple">
+            <div class="stat-val">৳${totalSavings.toLocaleString()}</div>
+            <div class="stat-lbl">মোট সঞ্চয়</div>
+          </div>
+          <div class="stat red">
+            <div class="stat-val">৳${totalExpenses.toLocaleString()}</div>
+            <div class="stat-lbl">মোট ব্যয়</div>
+          </div>
+          <div class="stat" style="grid-column:span 2">
+            <div class="stat-val">${totalMembers} জন</div>
+            <div class="stat-lbl">মোট সদস্য</div>
+          </div>
         </div>
 
         ${donations.length > 0 ? `
         <div class="section-title">দানের ইতিহাস</div>
         <table>
-          <thead><tr><th>তারিখ</th><th>ধরন</th><th>মাধ্যম</th><th>পরিমাণ</th><th>অবস্থা</th></tr></thead>
+          <thead><tr><th>তারিখ</th><th>সদস্য</th><th>ধরন</th><th>পরিমাণ</th><th>অবস্থা</th></tr></thead>
           <tbody>
             ${donations.map(d => `
               <tr>
                 <td>${new Date(d.createdAt).toLocaleDateString('bn-BD')}</td>
-                <td>${d.type}</td><td>${d.method}</td>
+                <td>${d.userName}</td>
+                <td>${d.type}</td>
                 <td>৳${d.amount.toLocaleString()}</td>
                 <td><span class="badge badge-${d.status}">${d.status === 'confirmed' ? 'নিশ্চিত' : d.status === 'pending' ? 'অপেক্ষারত' : 'বাতিল'}</span></td>
               </tr>`).join('')}
@@ -171,15 +213,30 @@ export default function ReportsPage() {
         ${loans.length > 0 ? `
         <div class="section-title">ঋণের ইতিহাস</div>
         <table>
-          <thead><tr><th>তারিখ</th><th>উদ্দেশ্য</th><th>পরিমাণ</th><th>পরিশোধ পরিকল্পনা</th><th>অবস্থা</th></tr></thead>
+          <thead><tr><th>তারিখ</th><th>সদস্য</th><th>উদ্দেশ্য</th><th>পরিমাণ</th><th>অবস্থা</th></tr></thead>
           <tbody>
             ${loans.map(l => `
               <tr>
                 <td>${new Date(l.createdAt).toLocaleDateString('bn-BD')}</td>
+                <td>${l.userName}</td>
                 <td>${l.purpose}</td>
                 <td>৳${l.amount.toLocaleString()}</td>
-                <td>${l.repaymentPlan}</td>
                 <td><span class="badge badge-${l.status}">${l.status === 'approved' ? 'অনুমোদিত' : l.status === 'pending' ? 'অপেক্ষারত' : 'বাতিল'}</span></td>
+              </tr>`).join('')}
+          </tbody>
+        </table>` : ''}
+
+        ${expenses.length > 0 ? `
+        <div class="section-title">ব্যয়ের ইতিহাস</div>
+        <table>
+          <thead><tr><th>তারিখ</th><th>শিরোনাম</th><th>ক্যাটাগরি</th><th>পরিমাণ</th></tr></thead>
+          <tbody>
+            ${expenses.map(e => `
+              <tr>
+                <td>${new Date(e.createdAt).toLocaleDateString('bn-BD')}</td>
+                <td>${e.title}</td>
+                <td>${e.category}</td>
+                <td>৳${e.amount.toLocaleString()}</td>
               </tr>`).join('')}
           </tbody>
         </table>` : ''}
@@ -198,8 +255,8 @@ export default function ReportsPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-xl font-bold text-gray-900">রিপোর্ট</h1>
-        <p className="text-sm text-gray-400 mt-0.5">আপনার কার্যক্রমের সারসংক্ষেপ</p>
+        <h1 className="text-xl font-bold text-gray-900">ফাউন্ডেশন রিপোর্ট</h1>
+        <p className="text-sm text-gray-400 mt-0.5">ফাউন্ডেশনের সামগ্রিক কার্যক্রম</p>
       </div>
 
       {/* মোট তহবিল — full-width highlight card */}
@@ -207,12 +264,23 @@ export default function ReportsPage() {
         <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-8 translate-x-8" />
         <div className="flex items-center gap-3 mb-1">
           <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
-            <TrendingUp size={18} className="text-white" />
+            <Wallet size={18} className="text-white" />
           </div>
           <p className="text-amber-100 text-sm font-medium">ফাউন্ডেশনের মোট তহবিল</p>
         </div>
         <p className="text-white text-3xl font-bold">{formatTaka(totalFund)}</p>
         <p className="text-amber-200 text-xs mt-1">সকল নিশ্চিত দানের সমষ্টি</p>
+      </div>
+
+      {/* মোট সদস্য — standalone card */}
+      <div className="card flex items-center gap-4 py-4">
+        <div className="w-12 h-12 bg-primary-100 rounded-2xl flex items-center justify-center shrink-0">
+          <Users size={22} className="text-primary-700" />
+        </div>
+        <div>
+          <p className="text-2xl font-bold text-primary-700">{toBn(totalMembers)} জন</p>
+          <p className="text-xs text-gray-500">মোট নিবন্ধিত সদস্য</p>
+        </div>
       </div>
 
       {/* Date range filter */}
@@ -239,28 +307,61 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* Summary cards */}
+      {/* Summary stats grid */}
       {loading ? (
         <div className="grid grid-cols-2 gap-3">
-          {[1,2,3,4].map(i => <div key={i} className="card h-20 animate-pulse" />)}
+          {[1,2,3,4,5,6].map(i => <div key={i} className="card h-20 animate-pulse" />)}
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3">
+          {/* দান */}
           <div className="card bg-green-50 text-center py-4">
+            <div className="flex justify-center mb-1">
+              <Heart size={16} className="text-green-600" />
+            </div>
             <p className="text-xl font-bold text-green-700">{formatTaka(totalDonated)}</p>
-            <p className="text-xs text-gray-500 mt-0.5">নিশ্চিত দান</p>
+            <p className="text-xs text-gray-500 mt-0.5">মোট দান</p>
           </div>
           <div className="card bg-green-50 text-center py-4">
+            <div className="flex justify-center mb-1">
+              <Heart size={16} className="text-green-600" />
+            </div>
             <p className="text-xl font-bold text-green-700">{toBn(confirmedDons.length)}টি</p>
             <p className="text-xs text-gray-500 mt-0.5">দানের সংখ্যা</p>
           </div>
+
+          {/* ঋণ */}
           <div className="card bg-blue-50 text-center py-4">
-            <p className="text-xl font-bold text-blue-700">{formatTaka(totalLoanAmt)}</p>
+            <div className="flex justify-center mb-1">
+              <CreditCard size={16} className="text-blue-600" />
+            </div>
+            <p className="text-xl font-bold text-blue-700">{formatTaka(totalApprovedAmt)}</p>
             <p className="text-xs text-gray-500 mt-0.5">অনুমোদিত ঋণ</p>
           </div>
           <div className="card bg-blue-50 text-center py-4">
+            <div className="flex justify-center mb-1">
+              <CreditCard size={16} className="text-blue-600" />
+            </div>
             <p className="text-xl font-bold text-blue-700">{toBn(loans.length)}টি</p>
             <p className="text-xs text-gray-500 mt-0.5">ঋণ আবেদন</p>
+          </div>
+
+          {/* সঞ্চয় */}
+          <div className="card bg-purple-50 text-center py-4">
+            <div className="flex justify-center mb-1">
+              <PiggyBank size={16} className="text-purple-600" />
+            </div>
+            <p className="text-xl font-bold text-purple-700">{formatTaka(totalSavings)}</p>
+            <p className="text-xs text-gray-500 mt-0.5">মোট সঞ্চয়</p>
+          </div>
+
+          {/* ব্যয় */}
+          <div className="card bg-red-50 text-center py-4">
+            <div className="flex justify-center mb-1">
+              <ArrowDownCircle size={16} className="text-red-600" />
+            </div>
+            <p className="text-xl font-bold text-red-600">{formatTaka(totalExpenses)}</p>
+            <p className="text-xs text-gray-500 mt-0.5">মোট ব্যয়</p>
           </div>
         </div>
       )}
@@ -278,13 +379,13 @@ export default function ReportsPage() {
           </div>
           <div className="text-left flex-1">
             <p className="text-sm font-semibold text-gray-800">প্রিন্ট করুন</p>
-            <p className="text-xs text-gray-500">সরাসরি প্রিন্ট ডায়ালগ খুলবে</p>
+            <p className="text-xs text-gray-500">সম্পূর্ণ রিপোর্ট প্রিন্ট হবে</p>
           </div>
           <Printer size={18} className="text-gray-400" />
         </button>
       </div>
 
-      {/* Donation preview */}
+      {/* Recent donations preview */}
       {!loading && donations.length > 0 && (
         <div className="card overflow-hidden">
           <h3 className="font-semibold text-gray-800 mb-3">দানের তালিকা ({toBn(donations.length)}টি)</h3>
@@ -292,8 +393,8 @@ export default function ReportsPage() {
             {donations.slice(0, 5).map(d => (
               <div key={d.id} className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0">
                 <div>
-                  <p className="text-sm font-medium text-gray-700">{d.type}</p>
-                  <p className="text-xs text-gray-400">{new Date(d.createdAt).toLocaleDateString('bn-BD')}</p>
+                  <p className="text-sm font-medium text-gray-700">{d.userName}</p>
+                  <p className="text-xs text-gray-400">{d.type} · {new Date(d.createdAt).toLocaleDateString('bn-BD')}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-bold text-gray-800">{formatTaka(d.amount)}</p>
@@ -315,7 +416,7 @@ export default function ReportsPage() {
         </div>
       )}
 
-      {/* Loans preview */}
+      {/* Recent loans preview */}
       {!loading && loans.length > 0 && (
         <div className="card overflow-hidden">
           <h3 className="font-semibold text-gray-800 mb-3">ঋণের তালিকা ({toBn(loans.length)}টি)</h3>
@@ -323,8 +424,8 @@ export default function ReportsPage() {
             {loans.slice(0, 5).map(l => (
               <div key={l.id} className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0">
                 <div>
-                  <p className="text-sm font-medium text-gray-700">{l.purpose}</p>
-                  <p className="text-xs text-gray-400">{new Date(l.createdAt).toLocaleDateString('bn-BD')}</p>
+                  <p className="text-sm font-medium text-gray-700">{l.userName}</p>
+                  <p className="text-xs text-gray-400">{l.purpose} · {new Date(l.createdAt).toLocaleDateString('bn-BD')}</p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-bold text-gray-800">{formatTaka(l.amount)}</p>
@@ -343,8 +444,26 @@ export default function ReportsPage() {
         </div>
       )}
 
+      {/* Recent expenses preview */}
+      {!loading && expenses.length > 0 && (
+        <div className="card overflow-hidden">
+          <h3 className="font-semibold text-gray-800 mb-3">ব্যয়ের তালিকা ({toBn(expenses.length)}টি)</h3>
+          <div className="space-y-2">
+            {expenses.slice(0, 5).map(e => (
+              <div key={e.id} className="flex items-center justify-between py-2.5 border-b border-gray-50 last:border-0">
+                <div>
+                  <p className="text-sm font-medium text-gray-700">{e.title}</p>
+                  <p className="text-xs text-gray-400">{e.category} · {new Date(e.createdAt).toLocaleDateString('bn-BD')}</p>
+                </div>
+                <p className="text-sm font-bold text-red-600">{formatTaka(e.amount)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Empty state */}
-      {!loading && donations.length === 0 && loans.length === 0 && (
+      {!loading && donations.length === 0 && loans.length === 0 && expenses.length === 0 && (
         <div className="text-center py-10">
           <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
             <FileText size={24} className="text-gray-300" />

@@ -25,7 +25,7 @@ export default function WelcomeCard({ user }: Props) {
       {/* Greeting */}
       <p className="text-primary-200 text-sm mb-0.5">আসসালামু আলাইকুম,</p>
       <h2 className="text-white text-xl font-bold mb-3">
-        মো: {user?.name || 'সদস্য'}
+        {user?.name || 'সদস্য'}
       </h2>
 
       {/* Date badge */}
