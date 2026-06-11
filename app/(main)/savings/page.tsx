@@ -6,7 +6,7 @@ import { db } from '@/lib/firebase';
 import { useAuthStore } from '@/store/useAuthStore';
 import { Saving, SavingRequest } from '@/lib/types';
 import { formatTaka, getRelativeTime, toBn } from '@/lib/utils';
-import { PiggyBank, TrendingUp, Plus, Clock, Check, X } from 'lucide-react';
+import { Wallet, TrendingUp, Plus, Clock, Check, X } from 'lucide-react';
 import Link from 'next/link';
 
 const statusConfig = {
@@ -77,7 +77,7 @@ export default function SavingsPage() {
             </p>
           </div>
           <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
-            <PiggyBank size={24} className="text-white" />
+            <Wallet size={24} className="text-white" />
           </div>
         </div>
         {pendingCount > 0 && (
@@ -111,7 +111,7 @@ export default function SavingsPage() {
         ) : savings.length === 0 ? (
           <div className="text-center py-14">
             <div className="w-16 h-16 bg-primary-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
-              <PiggyBank size={28} className="text-primary-300" />
+              <Wallet size={28} className="text-primary-300" />
             </div>
             <p className="text-gray-400 mb-4">এখনো কোনো সঞ্চয় নেই</p>
             <Link href="/savings/apply">
@@ -127,7 +127,7 @@ export default function SavingsPage() {
               {savings.map((s) => (
                 <div key={s.id} className="flex items-center gap-3 px-5 py-4">
                   <div className="w-9 h-9 bg-primary-100 rounded-xl flex items-center justify-center shrink-0">
-                    <PiggyBank size={16} className="text-primary-600" />
+                    <Wallet size={16} className="text-primary-600" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-gray-800">{s.note || 'সঞ্চয় জমা'}</p>

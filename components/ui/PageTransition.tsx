@@ -2,11 +2,9 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { LogoSpinner } from './LoadingScreen';
 
 /**
- * Shows a small logo spinner overlay whenever the route changes.
- * Drop this inside MainLayout (or RootLayout).
+ * Shows a simple spinner overlay whenever the route changes.
  */
 export default function PageTransition() {
   const pathname   = usePathname();
@@ -19,7 +17,7 @@ export default function PageTransition() {
       prevPath.current = pathname;
       setShow(true);
       if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => setShow(false), 600);
+      timerRef.current = setTimeout(() => setShow(false), 500);
     }
     return () => { if (timerRef.current) clearTimeout(timerRef.current); };
   }, [pathname]);
@@ -28,8 +26,8 @@ export default function PageTransition() {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
-      <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-5 shadow-xl">
-        <LogoSpinner size={48} />
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-lg">
+        <div className="w-9 h-9 border-[3px] border-primary-200 border-t-primary-700 rounded-full animate-spin" />
       </div>
     </div>
   );

@@ -22,8 +22,9 @@ export default function SavingApplyPage() {
   const router   = useRouter();
   const { user } = useAuthStore();
 
-  const [amount,  setAmount]  = useState('');
-  const [method,  setMethod]  = useState<SavingMethod>('bkash');
+  const [amount,    setAmount]    = useState('');
+  const [frequency, setFrequency] = useState<'monthly' | 'weekly'>('monthly');
+  const [method,    setMethod]    = useState<SavingMethod>('bkash');
   const [txId,    setTxId]    = useState('');
   const [note,    setNote]    = useState('');
   const [loading, setLoading] = useState(false);
@@ -59,6 +60,7 @@ export default function SavingApplyPage() {
         userName:      user!.name,
         userPhone:     user!.phone,
         amount:        parseFloat(amount),
+        frequency,
         method,
         transactionId: txId.trim() || 'সরাসরি জমা',
         note:          note.trim() || null,
@@ -130,6 +132,27 @@ export default function SavingApplyPage() {
                     : 'bg-gray-50 text-gray-600 border-gray-200'
                 }`}>
                 ৳{n.toLocaleString()}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Frequency */}
+        <div className="card space-y-3">
+          <h2 className="font-semibold text-gray-800 border-b pb-2">সঞ্চয়ের ধরন</h2>
+          <div className="grid grid-cols-2 gap-3">
+            {([
+              { key: 'monthly' as const, label: '📅 মাসিক' },
+              { key: 'weekly'  as const, label: '🗓️ সাপ্তাহিক' },
+            ]).map((f) => (
+              <button key={f.key} type="button"
+                onClick={() => setFrequency(f.key)}
+                className={`py-3 rounded-xl border text-sm font-medium transition-all ${
+                  frequency === f.key
+                    ? 'bg-primary-700 text-white border-primary-700'
+                    : 'bg-white text-gray-600 border-gray-200'
+                }`}>
+                {f.label}
               </button>
             ))}
           </div>

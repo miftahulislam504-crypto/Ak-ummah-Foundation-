@@ -131,6 +131,7 @@ export interface SavingRequest {
   userName:      string;
   userPhone:     string;
   amount:        number;
+  frequency:     'monthly' | 'weekly';
   method:        SavingMethod;
   transactionId: string;
   status:        SavingRequestStatus;

@@ -158,7 +158,7 @@ export default function ProfilePage() {
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
         </div>
 
-        <h2 className="text-white text-xl font-bold">মো: {user.name}</h2>
+        <h2 className="text-white text-xl font-bold">{user.name}</h2>
         <p className="text-primary-300 text-sm mt-1">{user.email}</p>
         <div className="flex items-center justify-center gap-2 mt-3">
           <span className={statusMap[user.status]?.cls}>{statusMap[user.status]?.label}</span>
