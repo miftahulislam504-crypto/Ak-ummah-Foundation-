@@ -7,7 +7,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
-import { Menu, X, Home, Activity, Phone, PlayCircle, Settings, Download, LogOut } from 'lucide-react';
+import { Menu, X, Home, Activity, Phone, PlayCircle, Settings, LogOut } from 'lucide-react';
 import NotificationBell from '@/components/notifications/NotificationBell';
 
 const MENU_ITEMS = [
@@ -129,23 +129,6 @@ export default function TopBar() {
               <span className="font-medium text-base">{label}</span>
             </Link>
           ))}
-
-          {/* APK Download */}
-          <div className="mx-4 mt-2 rounded-2xl bg-amber-50 border border-amber-100">
-            <a
-              href="https://drive.google.com/uc?export=download&id=1cjdGwQVRJLr0nh3CGwoQm-EbTE1D_xl2"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => setOpen(false)}
-              className="flex items-center gap-4 px-4 py-3.5 w-full text-amber-700"
-            >
-              <Download size={20} className="text-amber-600 flex-shrink-0" />
-              <div>
-                <p className="font-semibold text-base leading-tight">এপস ডাউনলোড</p>
-                <p className="text-xs text-amber-600 mt-0.5">APK ইনস্টল করুন</p>
-              </div>
-            </a>
-          </div>
         </nav>
 
         {/* Logout */}
